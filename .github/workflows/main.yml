@@ -1,0 +1,32 @@
+name: Build Kernel
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Código Fonte
+        uses: actions/checkout@v7
+
+      - name: Instalar Dependências do Sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc build-essential flex bison libssl-dev libncurses5-dev \
+            git zip unzip curl python3 python2 ca-certificates
+
+      - name: Compilar Kernel
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Upload da Imagem (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-Image
+          path: out_r8slte/arch/arm64/boot/Image
+          if-no-files-found: error
