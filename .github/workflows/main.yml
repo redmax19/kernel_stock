@@ -1,32 +1,70 @@
-name: Build Kernel
+name: Build SUSFS Kernel
 
 on:
-  push:
   workflow_dispatch:
+    inputs:
+      model:
+        description: "Device model"
+        required: true
+        default: "g780f"
+        type: choice
+        options: [g780f, g980f, g988b, g986b, g981f]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-
+    timeout-minutes: 120
     steps:
-      - name: Checkout Código Fonte
-        uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Instalar Dependências do Sistema
+      - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            bc build-essential flex bison libssl-dev libncurses5-dev \
-            git zip unzip curl python3 python2 ca-certificates
+          sudo apt-get install -y bc bison flex git make gcc libssl-dev python3 zip gpg
+          sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
-      - name: Compilar Kernel
+      - name: Download AOSP Clang r370808
         run: |
-          chmod +x build.sh
-          ./build.sh
+          cd /home/runner
+          curl -sL "https://codeload.github.com/AOSP-10-CAF/prebuilts_clang_host_linux-x86_clang-r370808/zip/refs/heads/10" -o clang.zip
+          mkdir -p tc/clang10
+          unzip -q clang.zip
+          SRC=$(find . -maxdepth 1 -name "prebuilts_clang*" -type d | head -1)
+          echo "source dir: $SRC"
+          ls "$SRC"
+          # clang binary location varies by repo layout
+          if [ -d "$SRC/clang-r370808" ]; then SRC="$SRC/clang-r370808"; fi
+          cp -a "$SRC/." tc/clang10/
+          ls tc/clang10/bin/ | head
+          tc/clang10/bin/clang --version | head -1
 
-      - name: Upload da Imagem (Artifact)
+      - name: Set up ARM64 cross toolchain
+        run: |
+          # Create android-prefixed symlinks to Ubuntu ARM64 tools
+          mkdir -p /home/runner/tc/gcc49/bin
+          cd /home/runner/tc/gcc49/bin
+          for t in as ld objcopy objdump strip ar nm ranlib readelf gcc g++ cpp; do
+            if [ -f /usr/bin/aarch64-linux-gnu-$t ]; then
+              ln -sf /usr/bin/aarch64-linux-gnu-$t aarch64-linux-android-$t
+            fi
+          done
+          # ld.lld from clang for linking
+          ln -sf /home/runner/tc/clang10/bin/ld.lld /home/runner/tc/gcc49/bin/aarch64-linux-android-ld.lld
+          ls -la /home/runner/tc/gcc49/bin/
+
+      - name: Build kernel
+        run: |
+          CLANG_DIR=/home/runner/tc/clang10 GCC_DIR=/home/runner/tc/gcc49 ./build.sh -m ${{ github.event.inputs.model }}
+
+      - name: Package zip
+        run: |
+          ./mkzip.sh -m ${{ github.event.inputs.model }}
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Kernel-Image
-          path: out_r8slte/arch/arm64/boot/Image
+          name: susfs-kernel-${{ github.event.inputs.model }}
+          path: AnyKernel3_KSUNext_SUSFS_*.zip
           if-no-files-found: error
+          retention-days: 7
