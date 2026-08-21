@@ -23,7 +23,7 @@ OUT="out_r8slte"
 HCF="-fcommon -Wno-error -Wno-deprecated-declarations -Wno-implicit-function-declaration"
 KCF="-Wno-unknown-warning-option -fno-builtin-stpcpy -fno-builtin-strlcpy -Wno-error -Wno-strict-prototypes -Wno-old-style-definition -Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-unused-function -Wno-implicit-int -Wno-format"
 
-COMMON="ARCH=arm64 O=$OUT CC=clang CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu-"
+COMMON="ARCH=arm64 SUBARCH=arm64 O=$OUT CC=clang HOSTCC=clang CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu-"
 
 cd "$ROOT"
 
@@ -32,15 +32,12 @@ echo " Building Kernel Clean (Stock): S20 FE (r8slte)"
 echo " Base Config: $BASE"
 echo "================================================="
 
-# 1. Limpeza opcional (descomente se precisar recriar a pasta out do zero)
-# rm -rf "$OUT"
-
-# 2. Gerar .config
+# 1. Gerar .config
 make $COMMON "KBUILD_HOSTCFLAGS=$HCF" "HOSTCFLAGS=$HCF" -j"$(nproc)" "$BASE"
 
-# 3. Compilar imagem
+# 2. Compilar imagem
 echo ">> Compilando com $(nproc) núcleos..."
-make $COMMON "KBUILD_HOSTCFLAGS=$HCF" "HOSTCFLAGS=$HCF" "KCFLAGS=$KCF" -j"$(nproc)" Image.gz-dtb
+make $COMMON "KBUILD_HOSTCFLAGS=$HCF" "HOSTCFLAGS=$HCF" "KCFLAGS=$KCF" -j"$(nproc)" Image
 
 IMG="$OUT/arch/arm64/boot/Image"
 if [ -f "$IMG" ]; then
