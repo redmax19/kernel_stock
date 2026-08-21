@@ -14,16 +14,8 @@ GCC_DIR="${GCC_DIR:-$ROOT/toolchain/gcc-cfp/gcc-cfp-jopp-only/aarch64-linux-andr
 
 [ -x "$CLANG_DIR/bin/clang" ] || { echo "ERROR: clang não encontrado em $CLANG_DIR"; exit 1; }
 
-# Tenta encontrar o GCC ARM32 se existir, senão usa o aarch64 como fallback de binutils
-GCC32_DIR="${GCC32_DIR:-$ROOT/toolchain/gcc-cfp/gcc-cfp-jopp-only/arm-linux-androideabi-4.9}"
-if [ -d "$GCC32_DIR/bin" ]; then
-    export CROSS_COMPILE_ARM32="$GCC32_DIR/bin/arm-linux-androideabi-"
-    export PATH="$CLANG_DIR/bin:$GCC_DIR/bin:$GCC32_DIR/bin:$PATH"
-else
-    export CROSS_COMPILE_ARM32="$GCC_DIR/bin/aarch64-linux-android-"
-    export PATH="$CLANG_DIR/bin:$GCC_DIR/bin:$PATH"
-fi
-
+# Forçar PATH estrito colocando os binários do GCC e Clang no topo
+export PATH="$CLANG_DIR/bin:$GCC_DIR/bin:$GCC_DIR/aarch64-linux-android/bin:$PATH"
 export ARCH=arm64 SUBARCH=arm64 LC_ALL=C
 
 # Macros Kconfig exigidas pela Samsung
@@ -32,14 +24,27 @@ export PLATFORM_VERSION=13 ANDROID_MAJOR_VERSION=t SEC_BUILD_CONF_VENDOR_BUILD_O
 HCF='-fcommon -Wno-error -Wno-deprecated-declarations -Wno-implicit-function-declaration'
 KCF='-Wno-unknown-warning-option -fno-builtin-stpcpy -fno-builtin-strlcpy -Wno-error -Wno-strict-prototypes -Wno-old-style-definition -Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-unused-function -Wno-implicit-int -Wno-format'
 
-COMMON="ARCH=arm64 SUBARCH=arm64 O=$OUT CC=clang HOSTCC=gcc HOSTLD=ld CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32 CLANG_TRIPLE=aarch64-linux-gnu- GCC_TOOLCHAIN=$GCC_DIR CLANG_PREFIX=aarch64-linux-android-"
+# Definição do COMMON com mapeamento direto dos binários do GCC (AS, LD, AR, OBJCOPY)
+COMMON="ARCH=arm64 \
+SUBARCH=arm64 \
+O=$OUT \
+CC=clang \
+HOSTCC=gcc \
+HOSTLD=ld \
+AS=aarch64-linux-android-as \
+LD=aarch64-linux-android-ld \
+AR=aarch64-linux-android-ar \
+OBJCOPY=aarch64-linux-android-objcopy \
+OBJDUMP=aarch64-linux-android-objdump \
+CROSS_COMPILE=aarch64-linux-android- \
+CLANG_TRIPLE=aarch64-linux-gnu- \
+GCC_TOOLCHAIN=$GCC_DIR"
 
 cd "$ROOT"
 echo "================================================="
 echo " Building Kernel: S20 FE (r8slte)"
 echo " Base Config: $BASE"
 echo " Clang: $("$CLANG_DIR/bin/clang" --version | head -1)"
-echo " CROSS_COMPILE_ARM32: $CROSS_COMPILE_ARM32"
 echo "================================================="
 
 # 1. Gerar defconfig inicial
