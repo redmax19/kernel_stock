@@ -15,15 +15,16 @@ GCC_DIR="${GCC_DIR:-$ROOT/toolchain/gcc-cfp/gcc-cfp-jopp-only/aarch64-linux-andr
 [ -x "$CLANG_DIR/bin/clang" ] || { echo "ERROR: clang não encontrado em $CLANG_DIR"; exit 1; }
 
 export PATH="$CLANG_DIR/bin:$GCC_DIR/bin:$PATH"
+export LD_LIBRARY_PATH="$CLANG_DIR/lib64:$LD_LIBRARY_PATH"
 export ARCH=arm64 SUBARCH=arm64 LC_ALL=C
 
 # Macros Kconfig exigidas pela Samsung
 export PLATFORM_VERSION=13 ANDROID_MAJOR_VERSION=t SEC_BUILD_CONF_VENDOR_BUILD_OS=13
 
 HCF='-fcommon -Wno-error -Wno-deprecated-declarations -Wno-implicit-function-declaration'
-KCF='-Wno-unknown-warning-option -fno-builtin-stpcpy -fno-builtin-strlcpy -Wno-error -Wno-strict-prototypes -Wno-old-style-definition -Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-unused-function -Wno-implicit-int -Wno-format'
+KCF='-Wno-unknown-warning-option -fno-builtin-stpcpy -fno-builtin-strlcpy -Wno-error -Wno-strict-prototypes -Wno-old-style-definition -Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-unused-function -Wno-implicit-int -Wno-format -no-integrated-as'
 
-COMMON="ARCH=arm64 SUBARCH=arm64 O=$OUT CC=clang HOSTCC=gcc HOSTLD=ld CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu-"
+COMMON="ARCH=arm64 SUBARCH=arm64 O=$OUT CC=clang HOSTCC=gcc HOSTLD=ld CROSS_COMPILE=$GCC_DIR/bin/aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu- CLANG_TARGET_FLAGS=-no-integrated-as"
 
 cd "$ROOT"
 echo "================================================="
