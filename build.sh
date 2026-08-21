@@ -23,7 +23,8 @@ OUT="out_r8slte"
 HCF="-fcommon -Wno-error -Wno-deprecated-declarations -Wno-implicit-function-declaration"
 KCF="-Wno-unknown-warning-option -fno-builtin-stpcpy -fno-builtin-strlcpy -Wno-error -Wno-strict-prototypes -Wno-old-style-definition -Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-unused-function -Wno-implicit-int -Wno-format"
 
-COMMON="ARCH=arm64 SUBARCH=arm64 O=$OUT CC=clang HOSTCC=clang CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu-"
+# Correção: isolando HOSTCC/HOSTLD do CROSS_COMPILE para não usar o 'as' do arm64 nos scripts x86_64
+COMMON="ARCH=arm64 SUBARCH=arm64 O=$OUT CC=clang HOSTCC=gcc HOSTLD=ld CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu-"
 
 cd "$ROOT"
 
