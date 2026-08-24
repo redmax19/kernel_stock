@@ -55,7 +55,7 @@ jobs:
 
       - name: Build kernel
         run: |
-          CLANG_DIR=/home/runner/tc/clang10 GCC_DIR=/home/runner/tc/gcc49 ./build.sh -m ${{ github.event.inputs.model }}
+          CLANG_DIR=/home/runner/tc/clang10 GCC_DIR=/home/runner/tc/gcc49 bash build.sh -m ${{ github.event.inputs.model }}
 
       - name: Package zip
         run: |
