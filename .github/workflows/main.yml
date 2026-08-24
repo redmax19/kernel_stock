@@ -59,7 +59,7 @@ jobs:
 
       - name: Package zip
         run: |
-          ./mkzip.sh -m ${{ github.event.inputs.model }}
+          bash mkzip.sh -m ${{ github.event.inputs.model }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
