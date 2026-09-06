@@ -38,9 +38,19 @@ jobs:
       - name: Configure and Build Kernel
         run: bash build_kernel.sh
 
-      - name: Upload Kernel Artifact
-        uses: actions/upload-artifact@v4
+      - name: AnyKernel3
+        run: git clone https://github.com/redmax19/AnyKernel3.git
+
+      - name: Build AnyKernel package
+        run: |
+         cp out/arch/arm64/boot/Image AnyKernel3/Image
+         cd AnyKernel3
+         zip -r9 "../alessandro r8s KernelSU.zip" * -x .git .github README.md *placeholder
+
+      - name: Upload AnyKernel package
+        uses: actions/upload-artifact@v7
         with:
-         name: Image.gz-and-modules-r8s
-         path: |
-          out/arch/arm64/boot/Image.gz
+         name: AnyKernel package
+         path: alessandro r8s KernelSU.zip
+
+  
